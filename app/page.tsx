@@ -1,3 +1,4 @@
+// app/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -8,43 +9,27 @@ import FeaturesSection from "@/components/features-section";
 import FaqSection from "@/components/faq-section";
 import Footer from "@/components/footer";
 import ColorTrading from "@/components/colorTrading";
-import { ConnectWallet } from "@thirdweb-dev/react";
-import { AuthRedirect } from "@/components/auth/AuthRedirect";
+import { ConnectWallet, useAddress } from "@thirdweb-dev/react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const address = useAddress();
+  const router = useRouter();
+  
+  useEffect(() => {
+    if (address) {
+      router.push("/dashboard");
+    }
+  }, [address, router]);
+
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Redirect authenticated users to /dashboard */}
-      <AuthRedirect whenAuthenticated="/dashboard" />
-
       {/* Navbar */}
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-6 md:gap-10">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="h-6 w-6 rounded-full bg-gradient-to-br from-violet-500 to-indigo-700"></div>
-              <span className="font-bold">ColorFi</span>
-            </Link>
-            <nav className="hidden gap-6 md:flex">
-              <Link
-                href="/"
-                className="flex items-center text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"
-              >
-                Home
-              </Link>
-              <Link
-                href="#features"
-                className="flex items-center text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"
-              >
-                Features
-              </Link>
-              <Link
-                href="#faq"
-                className="flex items-center text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"
-              >
-                FAQ
-              </Link>
-            </nav>
+            {/* Your existing navbar content */}
           </div>
           <div className="flex items-center gap-2">
             <ModeToggle />
