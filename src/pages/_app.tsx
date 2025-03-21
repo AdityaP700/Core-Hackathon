@@ -2,7 +2,7 @@
 import type { AppProps } from 'next/app';
 import { ThirdwebProvider } from '@thirdweb-dev/react';
 import { defineChain } from 'thirdweb/chains';
-import '../styles/globals.css'; // Adjust this path based on your project structure
+import '@/app/globals.css';
 
 // Define the chain (Core DAO example)
 const coreDAO = defineChain({
@@ -17,7 +17,7 @@ const coreDAO = defineChain({
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <ThirdwebProvider activeChain={coreDAO} clientId={process.env.NEXT_PUBLIC_TEMPLATE_CLIENT_ID}>
+    <ThirdwebProvider activeChain="core" clientId={process.env.NEXT_PUBLIC_TEMPLATE_CLIENT_ID}>
       <Component {...pageProps} />
     </ThirdwebProvider>
   );

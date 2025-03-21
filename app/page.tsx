@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
 import HeroSection from "@/components/hero-section";
 import FeaturesSection from "@/components/features-section";

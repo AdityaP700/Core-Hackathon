@@ -72,7 +72,7 @@ export function ColorBoard() {
           setCurrentInterval(prevInterval => prevInterval + 1);
           
           if (colorHistory.length >= 3) {
-            setHotAndColdColors(identifyHotAndColdColors(colorHistory));
+            setHotAndColdColors(getHotAndColdColors(colorHistory));
           }
           
           setTimeout(() => {
@@ -90,7 +90,7 @@ export function ColorBoard() {
     };
   }, [gameState, colorHistory, currentInterval]);
 
-  const potentialPayout = selectedColor ? calculatePayout(betAmount) : 0;
+  const potentialPayout = selectedColor ? calculatePayout(betAmount, selectedColor, colorHistory) : 0;
 
   return (
     <div className="bg-gray-800 rounded-lg p-6">

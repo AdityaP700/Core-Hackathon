@@ -6,163 +6,118 @@ import { useAddress } from "@thirdweb-dev/react";
 import { ethers } from "ethers";
 import { gameWebSocketService } from "@/lib/websocket/gameWebSocket";
 import { joinGame } from "@/lib/contracts/colorTrading";
+import { GameRoom } from "./GameRoom";
+import { motion } from "framer-motion";
+import { Sparkles, Coins, Timer } from "lucide-react";
 
-type Game = {
+interface Game {
   id: string;
   startTime: number;
   entryFee: string;
   isFinalized: boolean;
   players?: number;
-};
+}
 
 export function LiveGames() {
   const [games, setGames] = useState<Game[]>([]);
+  const [selectedGame, setSelectedGame] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoading, setIsProcessing] = useState(false);
   const address = useAddress();
 
-  const formatTimeRemaining = (startTime: number) => {
-    const diff = startTime - Date.now();
-    const minutes = Math.floor(diff / 60000);
-    const seconds = Math.floor((diff % 60000) / 1000);
-    return `${minutes}m ${seconds}s`;
-  };
-
   useEffect(() => {
-    const fetchGames = async () => {
-      try {
-        const activeGames = await gameWebSocketService.getActiveGames();
-        setGames(activeGames);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch games');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchGames();
-
-    // Subscribe to new game events
-    gameWebSocketService.subscribe('gameCreated', (data) => {
-      setGames(prev => [...prev, {
-        id: data.gameId.toString(),
-        startTime: data.startTime,
-        entryFee: '0',
-        isFinalized: false
-      }]);
-    });
-
-    return () => {
-      gameWebSocketService.unsubscribe('gameCreated', () => {});
-    };
+    const mockGames = [
+      { id: "1", startTime: Date.now() + 300000, entryFee: "0.1", isFinalized: false, players: 3 },
+      { id: "2", startTime: Date.now() + 600000, entryFee: "0.2", isFinalized: false, players: 5 },
+      { id: "3", startTime: Date.now() + 900000, entryFee: "0.15", isFinalized: false, players: 2 },
+    ];
+    setGames(mockGames);
   }, []);
 
-  const handleJoinGame = async (gameId: string, entryFee: string) => {
-    try {
-      setError(null);
-      setIsProcessing(true);
-      
-      if (!window.ethereum) {
-        throw new Error('Please install MetaMask to join games');
-      }
-      
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      
-      // Request account access
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-      
-      await joinGame(signer, parseInt(gameId), 'red', entryFee);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to join game');
-    } finally {
-      setIsProcessing(false);
+  const handleJoinGame = async (gameId: string) => {
+    if (!address) {
+      setError("Please connect your wallet first");
+      return;
     }
+    setSelectedGame(gameId);
   };
 
+  const handleGameComplete = (result: any) => {
+    setSelectedGame(null);
+  };
+
+  if (selectedGame) {
+    return (
+      <GameRoom 
+        gameId={selectedGame}
+        entryFee="0.1"
+        onGameComplete={handleGameComplete}
+      />
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="text-center mb-4">
-        <h2 className="text-2xl font-bold mb-2">Upcoming Games</h2>
+    <div className="space-y-8 p-6">
+      <div className="max-w-md mx-auto bg-gradient-to-br from-purple-900/50 to-indigo-900/50 p-6 rounded-xl border border-purple-500/20 text-center">
+        <Sparkles className="w-12 h-12 mx-auto mb-4 text-purple-400" />
+        <h2 className="text-2xl font-bold mb-2">Color Trading Game</h2>
         <p className="text-gray-400">
-          Join a live game to compete with other players for real rewards!
+          Bet your CORE tokens on colors and win up to 1.5x your bet!
         </p>
+        <Button
+          onClick={() => setSelectedGame("1")}
+          className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600"
+        >
+          Enter Game Room
+        </Button>
       </div>
-
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-      
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {isLoading ? (
-          <div className="col-span-full text-center p-8 bg-gray-800/50 rounded-xl backdrop-blur-sm animate-pulse">
-            <div className="inline-block w-8 h-8 border-4 border-t-purple-500 border-gray-700 rounded-full animate-spin mb-4"></div>
-            <p>Loading available games...</p>
-          </div>
-        ) : games.length === 0 ? (
-          <div className="col-span-full text-center p-8 bg-gray-800/50 rounded-xl backdrop-blur-sm border border-gray-700">
-            <p className="text-xl font-semibold mb-2">No Active Games</p>
-            <p className="text-gray-400">Check back soon for new betting opportunities!</p>
-          </div>
-        ) : (
-          games.map((game) => (
-            <div 
-              key={game.id}
-              className="bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-700 hover:border-purple-500/50 transition-all duration-300 group"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="font-semibold bg-gradient-to-r from-purple-400 to-pink-500 text-transparent bg-clip-text">Game #{game.id}</span>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {games.map((game) => (
+          <motion.div
+            key={game.id}
+            whileHover={{ scale: 1.02 }}
+            className="relative bg-gradient-to-br from-purple-900/50 to-indigo-900/50 p-6 rounded-xl border border-purple-500/20 backdrop-blur-sm overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 animate-pulse" />
+            <div className="relative z-10">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
+                  Game Room #{game.id}
+                </h3>
+                <span className="px-3 py-1 bg-purple-500/20 rounded-full text-purple-300 text-sm">
+                  Live
+                </span>
+              </div>
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center text-gray-300">
+                  <Timer className="w-4 h-4 mr-2" />
+                  <span>Starts in {Math.floor((game.startTime - Date.now()) / 60000)} minutes</span>
                 </div>
-                <div className="px-3 py-1 rounded-full bg-gray-700/50 text-sm font-medium">
-                  {formatTimeRemaining(game.startTime)}
+                <div className="flex items-center text-gray-300">
+                  <Coins className="w-4 h-4 mr-2" />
+                  <span>Entry Fee: {game.entryFee} CORE</span>
+                </div>
+                <div className="flex items-center text-gray-300">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  <span>{game.players} Players Joined</span>
                 </div>
               </div>
-              
-              <div className="space-y-3 mb-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Entry Fee</span>
-                  <span className="font-medium text-lg">{game.entryFee} CORE</span>
-                </div>
-                
-                {game.players && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Players</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="h-2 w-24 bg-gray-700 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-purple-500 to-pink-500" 
-                          style={{ width: `${(game.players/100) * 100}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm font-medium">{game.players}/100</span>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Potential Win</span>
-                  <span className="font-medium text-emerald-400">{(Number(game.entryFee) * 1.8).toFixed(2)} CORE</span>
-                </div>
-              </div>
-
-              <Button 
-                onClick={() => handleJoinGame(game.id, game.entryFee)}
-                disabled={!address || isProcessing}
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
+              <Button
+                onClick={() => handleJoinGame(game.id)}
+                disabled={!address}
+                className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold py-3 rounded-lg transition-all duration-300 shadow-lg shadow-purple-500/25"
               >
-                {!address ? "Connect Wallet to Join" : 
-                 isProcessing ? (
-                   <div className="flex items-center justify-center space-x-2">
-                     <div className="w-4 h-4 border-2 border-t-white border-gray-400 rounded-full animate-spin"></div>
-                     <span>Processing...</span>
-                   </div>
-                 ) : "Join Game"}
+                {!address ? "Connect Wallet to Join" : "Enter Game Room"}
               </Button>
             </div>
-          ))
-        )}
+          </motion.div>
+        ))}
       </div>
+      {error && (
+        <div className="text-red-400 text-center p-4 bg-red-500/10 rounded-lg">
+          {error}
+        </div>
+      )}
     </div>
   );
 }

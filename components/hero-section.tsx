@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Bitcoin, Palette, Sparkles } from "lucide-react"
+import "@/app/star-animation.css"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -23,20 +24,24 @@ export default function HeroSection() {
       {/* Animated particle effects */}
       <div className="absolute inset-0 z-0 opacity-30">
         <div className="stars-container">
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div 
-              key={i} 
-              className="absolute rounded-full bg-white" 
-              style={{
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                width: `${Math.random() * 3 + 1}px`,
-                height: `${Math.random() * 3 + 1}px`,
-                opacity: Math.random() * 0.8 + 0.2,
-                animation: `twinkle ${Math.random() * 5 + 3}s infinite alternate`
-              }}
-            />
-          ))}
+          {Array.from({ length: 20 }).map((_, i) => {
+            const style = {
+              '--star-opacity-start': '0.2',
+              '--star-opacity-end': '0.8',
+              top: `${i * 5}%`,
+              left: `${(i * 7) % 100}%`,
+              width: `${2}px`,
+              height: `${2}px`,
+              animation: `twinkle 4s infinite alternate`
+            }
+            return (
+              <div 
+                key={i} 
+                className="star"
+                style={style}
+              />
+            )
+          })}
         </div>
       </div>
       
